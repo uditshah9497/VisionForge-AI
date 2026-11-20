@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#080C14] text-slate-100 font-sans selection:bg-cyan-500/30 selection:text-cyan-200;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0B0F19;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1E293B;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+  }
+}
+
+.panel-card {
+  @apply bg-[#0D1322] border border-slate-800/80 rounded-xl shadow-lg;
+}
+
+.panel-card-hover {
+  @apply panel-card transition-all duration-200 hover:border-cyan-500/40 hover:shadow-cyan-500/5;
+}
+
+.badge-cyan {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-950/80 text-cyan-400 border border-cyan-800/50;
+}
+
+.badge-emerald {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-950/80 text-emerald-400 border border-emerald-800/50;
+}
+
+.badge-amber {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-950/80 text-amber-400 border border-amber-800/50;
+}
+
+.badge-rose {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-950/80 text-rose-400 border border-rose-800/50;
+}
+
+.badge-slate {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700;
+}
