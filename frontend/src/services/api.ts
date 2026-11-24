@@ -36,6 +36,7 @@ export const api = {
     name: string;
     description?: string;
     domain?: string;
+    image_family?: string;
     image_count: number;
     components_per_scene: number;
     difficulty: string;

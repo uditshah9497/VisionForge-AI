@@ -58,6 +58,7 @@ class DatasetCreateRequest(BaseModel):
     name: str = "Industrial Assembly Workstation Bench"
     description: Optional[str] = "Synthetic manufacturing benchmark containing assembly components, defects, and spatial variations."
     domain: str = "Manufacturing Quality Inspection"
+    image_family: str = "mechanical_assembly"  # mechanical_assembly, pcb_electronics, aerospace_structural
     image_count: int = 5
     components_per_scene: int = 6
     difficulty: str = "medium"  # easy, medium, hard
@@ -71,6 +72,7 @@ class DatasetResponse(BaseModel):
     name: str
     description: Optional[str]
     domain: str
+    image_family: str = "mechanical_assembly"
     seed: int
     difficulty: str
     num_scenes: int

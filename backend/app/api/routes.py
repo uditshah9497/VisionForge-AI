@@ -116,6 +116,7 @@ def generate_dataset(req: DatasetCreateRequest, db: Session = Depends(get_db)):
         sg = generator.generate_scene(
             scene_id=scene_id,
             dataset_id=dataset_id,
+            image_family=getattr(req, "image_family", "mechanical_assembly"),
             difficulty=req.difficulty,
             component_count=req.components_per_scene,
             defect_types=req.defect_types,

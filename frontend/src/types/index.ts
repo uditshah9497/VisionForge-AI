@@ -3,6 +3,7 @@ export interface Dataset {
   name: string;
   description?: string;
   domain: string;
+  image_family?: string;
   seed: number;
   difficulty: string;
   num_scenes: number;

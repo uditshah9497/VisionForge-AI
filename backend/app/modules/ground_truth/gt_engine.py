@@ -52,7 +52,7 @@ class GroundTruthEngine:
         elif rule == "count_fasteners":
             fasteners = [
                 c for c in components
-                if c["type"] in ("hex_bolt", "hex_nut", "fastener") and c.get("visibility_score", 1.0) > 0.3
+                if c["type"] in ("hex_bolt", "hex_nut", "fastener", "countersunk_rivet", "lockwire_fastener", "torque_seal_bolt") and c.get("visibility_score", 1.0) > 0.3
             ]
             return str(len(fasteners)), "integer", [c["id"] for c in fasteners]
 

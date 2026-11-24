@@ -30,6 +30,7 @@ export const SyntheticStudioView: React.FC<SyntheticStudioViewProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [form, setForm] = useState({
     name: 'Industrial Assembly Test Bench',
+    image_family: 'mechanical_assembly',
     image_count: 5,
     components_per_scene: 6,
     difficulty: 'medium',
@@ -89,6 +90,20 @@ export const SyntheticStudioView: React.FC<SyntheticStudioViewProps> = ({
                 className="w-full bg-[#080C14] border border-slate-800 rounded-lg px-3 py-2 text-slate-100 outline-none focus:border-cyan-500"
                 required
               />
+            </div>
+
+            {/* Image Family Selector */}
+            <div>
+              <label className="block text-slate-400 font-medium mb-1">Image Family & Domain</label>
+              <select
+                value={form.image_family}
+                onChange={e => setForm({ ...form, image_family: e.target.value })}
+                className="w-full bg-[#080C14] border border-slate-800 rounded-lg px-3 py-2 text-cyan-300 font-medium outline-none focus:border-cyan-500"
+              >
+                <option value="mechanical_assembly">⚙️ Industrial Mechanical Workstation</option>
+                <option value="pcb_electronics">📟 SMT PCB Micro-Electronics Inspection</option>
+                <option value="aerospace_structural">🚀 Aerospace Fasteners & Composite Panel</option>
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-3">

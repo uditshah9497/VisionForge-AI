@@ -3,14 +3,17 @@ import random
 import uuid
 from typing import Dict, Any, List, Optional
 from backend.app.modules.synthetic.components import (
-    COMPONENT_TYPES,
+    IMAGE_FAMILIES,
+    MECHANICAL_COMPONENTS,
+    PCB_COMPONENTS,
+    AEROSPACE_COMPONENTS,
     COMPONENT_NAMES,
     DEFAULT_DIMENSIONS,
     compute_polygon_bounds
 )
 
 class SceneGenerator:
-    """Parametric industrial assembly scene graph generator with deterministic seeding."""
+    """Parametric industrial assembly & electronics scene graph generator with deterministic seeding."""
 
     def __init__(self, seed: Optional[int] = None):
         self.seed = seed if seed is not None else 42
@@ -19,6 +22,7 @@ class SceneGenerator:
         self,
         scene_id: Optional[str] = None,
         dataset_id: str = "ds_default",
+        image_family: str = "mechanical_assembly",
         difficulty: str = "medium",
         component_count: int = 6,
         defect_types: Optional[List[str]] = None,
@@ -28,7 +32,7 @@ class SceneGenerator:
         height: int = 600,
         seed: Optional[int] = None
     ) -> Dict[str, Any]:
-        """Generate a complete deterministic SceneGraph."""
+        """Generate a complete deterministic SceneGraph supporting multiple image families."""
         effective_seed = seed if seed is not None else self.seed
         rng = random.Random(effective_seed)
 
@@ -38,30 +42,30 @@ class SceneGenerator:
         if defect_types is None:
             defect_types = ["missing", "misplaced", "orientation", "occlusion"]
 
-        # Adjust component count by difficulty if default requested
+        # Adjust component count by difficulty
         if difficulty == "easy":
             count = min(component_count, 4)
             num_defects = 1 if defect_types else 0
         elif difficulty == "hard":
             count = max(component_count, 8)
             num_defects = min(len(defect_types), rng.randint(2, 3))
-        else:  # medium
+        else:
             count = component_count
             num_defects = 1 if defect_types else 0
 
-        # Workstation environment config
+        # Workstation lighting profile
         ambient_map = {
-            "standard_5000k": 0.80,
-            "tungsten_3200k": 0.70,
+            "standard_5000k": 0.82,
+            "tungsten_3200k": 0.72,
             "low_light": 0.45,
-            "harsh_shadows": 0.85
+            "harsh_shadows": 0.88
         }
-        ambient = ambient_map.get(lighting, 0.75)
+        ambient = ambient_map.get(lighting, 0.78)
         lighting_dir = rng.choice(["top_left", "top_right", "direct"])
 
         workstation = {
-            "fixture_type": "optical_breadboard_grid",
-            "surface_color": "#141a24",
+            "fixture_type": f"{image_family}_substrate",
+            "surface_color": "#121822" if image_family == "mechanical_assembly" else ("#0f4b2a" if image_family == "pcb_electronics" else "#181a20"),
             "grid_spacing": 40,
             "lighting": {
                 "ambient": ambient,
@@ -72,12 +76,26 @@ class SceneGenerator:
             }
         }
 
-        # 1. Always place a central foundation plate or fixture (Layer 1)
+        # 1. Base Foundation Component (Layer 1)
         components = []
-        base_cx = rng.randint(350, 450)
-        base_cy = rng.randint(260, 340)
-        base_type = "mounting_plate" if rng.random() > 0.3 else "assembly_fixture"
-        base_dims = dict(DEFAULT_DIMENSIONS[base_type])
+        base_cx = rng.randint(370, 430)
+        base_cy = rng.randint(270, 330)
+
+        if image_family == "pcb_electronics":
+            base_type = "mounting_plate"
+            base_name = "FR4 Precision PCB Board"
+            base_dims = {"width": 320, "height": 220, "hole_radius": 5}
+            candidate_types = [t for t in PCB_COMPONENTS]
+        elif image_family == "aerospace_structural":
+            base_type = "composite_panel"
+            base_name = "Carbon-Fiber Composite Substrate"
+            base_dims = {"width": 300, "height": 210}
+            candidate_types = [t for t in AEROSPACE_COMPONENTS if t != "composite_panel"]
+        else:
+            base_type = "mounting_plate" if rng.random() > 0.3 else "assembly_fixture"
+            base_name = COMPONENT_NAMES.get(base_type, "Machined Mounting Plate")
+            base_dims = dict(DEFAULT_DIMENSIONS[base_type])
+            candidate_types = [t for t in MECHANICAL_COMPONENTS if t not in ("mounting_plate", "assembly_fixture")]
 
         base_id = f"comp_{base_type}_0"
         base_bbox = [
@@ -90,12 +108,12 @@ class SceneGenerator:
         components.append({
             "id": base_id,
             "type": base_type,
-            "name": COMPONENT_NAMES[base_type],
+            "name": base_name,
             "center": {"x": float(base_cx), "y": float(base_cy)},
             "dimensions": base_dims,
             "bbox": [round(b, 1) for b in base_bbox],
             "rotation_deg": 0.0,
-            "material": "anodized_aluminum",
+            "material": "anodized_aluminum" if image_family == "mechanical_assembly" else ("pcb_solder_mask" if image_family == "pcb_electronics" else "composite_weave"),
             "expected_position": {"x": float(base_cx), "y": float(base_cy), "rotation_deg": 0.0},
             "is_defective": False,
             "defect_type": None,
@@ -105,27 +123,22 @@ class SceneGenerator:
         })
 
         # 2. Place assembly components (Layer 2)
-        candidate_types = [t for t in COMPONENT_TYPES if t not in ("mounting_plate", "assembly_fixture")]
-        # Ensure a diverse selection of components
         selected_types = []
         for i in range(count - 1):
             selected_types.append(candidate_types[i % len(candidate_types)])
         rng.shuffle(selected_types)
 
-        # Decide which components will have defects
         defective_indices = set(rng.sample(range(len(selected_types)), min(num_defects, len(selected_types))))
 
-        # Define grid slots on and around the base plate
+        # Define grid slots on and around the base fixture
         slots = []
         plate_w = base_dims["width"]
         plate_h = base_dims["height"]
-        # Inset slots on the plate
         slots.append((base_cx - plate_w * 0.28, base_cy - plate_h * 0.25))
         slots.append((base_cx + plate_w * 0.28, base_cy - plate_h * 0.25))
         slots.append((base_cx - plate_w * 0.28, base_cy + plate_h * 0.25))
         slots.append((base_cx + plate_w * 0.28, base_cy + plate_h * 0.25))
         slots.append((base_cx, base_cy))
-        # Outer workstation slots
         slots.append((base_cx - plate_w * 0.65, base_cy))
         slots.append((base_cx + plate_w * 0.65, base_cy))
         slots.append((base_cx, base_cy - plate_h * 0.70))
@@ -137,7 +150,7 @@ class SceneGenerator:
 
         for idx, ctype in enumerate(selected_types):
             slot_x, slot_y = slots[idx % len(slots)]
-            dims = dict(DEFAULT_DIMENSIONS[ctype])
+            dims = dict(DEFAULT_DIMENSIONS.get(ctype, {"width": 50, "height": 40}))
             comp_id = f"comp_{ctype}_{idx + 1}"
 
             expected_x = float(slot_x)
@@ -154,42 +167,33 @@ class SceneGenerator:
                 chosen_defect = rng.choice(defect_types)
                 defect_type = chosen_defect
                 if chosen_defect == "missing":
-                    # Component is absent; expected socket exists
                     pass
                 elif chosen_defect == "misplaced":
-                    # Displaced by 35-55px
                     offset_angle = rng.uniform(0, 2 * math.pi)
                     offset_dist = rng.uniform(35, 55)
                     actual_x += offset_dist * math.cos(offset_angle)
                     actual_y += offset_dist * math.sin(offset_angle)
                 elif chosen_defect == "orientation":
-                    # Inverted or 90/180 degrees rotated
                     actual_rot = float(rng.choice([90, 180, 270]))
                 elif chosen_defect == "occlusion":
-                    # Handled via occlusion overlay
                     pass
 
             # Calculate Bounding Box
-            if ctype in ("spur_gear", "hex_nut", "fastener"):
+            if ctype in ("spur_gear", "hex_nut", "fastener", "electrolytic_cap", "countersunk_rivet"):
                 r = dims.get("radius", 40)
                 bbox = [actual_x - r, actual_y - r, actual_x + r, actual_y + r]
-            elif ctype == "hex_bolt":
+            elif ctype in ("hex_bolt", "lockwire_fastener", "torque_seal_bolt"):
                 r = dims.get("flange_radius", 24)
                 bbox = [actual_x - r, actual_y - r, actual_x + r, actual_y + r]
             elif ctype == "pipe":
                 l = dims.get("length", 160)
-                d = dims.get("diameter", 26)
+                d = dims.get("diameter", 28)
                 bbox = [actual_x - l / 2, actual_y - d / 2, actual_x + l / 2, actual_y + d / 2]
-            elif ctype == "bracket":
-                w = dims.get("width", 70)
-                h = dims.get("height", 70)
-                bbox = [actual_x - w / 2, actual_y - h / 2, actual_x + w / 2, actual_y + h / 2]
             else:
-                w = dims.get("width", 90)
-                h = dims.get("height", 50)
+                w = dims.get("width", 60)
+                h = dims.get("height", 40)
                 bbox = [actual_x - w / 2, actual_y - h / 2, actual_x + w / 2, actual_y + h / 2]
 
-            # Clamp bbox to image canvas
             bbox = [
                 max(0.0, min(float(width), bbox[0])),
                 max(0.0, min(float(height), bbox[1])),
@@ -203,7 +207,7 @@ class SceneGenerator:
             components.append({
                 "id": comp_id,
                 "type": ctype,
-                "name": COMPONENT_NAMES[ctype],
+                "name": COMPONENT_NAMES.get(ctype, ctype.replace('_', ' ').title()),
                 "center": {"x": round(actual_x, 1), "y": round(actual_y, 1)},
                 "dimensions": dims,
                 "bbox": [round(b, 1) for b in bbox],
@@ -217,11 +221,10 @@ class SceneGenerator:
                 "layer": 2
             })
 
-        # 3. Add Occlusions if difficulty is hard or occlusion defect injected
+        # 3. Add Occlusions
         occlusions = []
         has_occlusion_defect = any(c.get("defect_type") == "occlusion" for c in components)
         if difficulty == "hard" or has_occlusion_defect:
-            # Wire harness crossing across components
             occluded_comp = next((c for c in components if c.get("defect_type") == "occlusion"), None)
             if occluded_comp:
                 ox = occluded_comp["center"]["x"]
@@ -236,7 +239,7 @@ class SceneGenerator:
                 "points": wire_points
             })
 
-        # 4. Add Background Clutter if medium or hard
+        # 4. Background Clutter
         clutter = []
         if difficulty in ("medium", "hard"):
             num_clutter = rng.randint(1, 3 if difficulty == "hard" else 2)
@@ -249,12 +252,13 @@ class SceneGenerator:
                     "y": rng.randint(60, height - 60)
                 })
 
-        # 5. Compute Spatial Relations between components
+        # 5. Spatial Relations
         spatial_relations = self._compute_spatial_relations(components)
 
         return {
             "scene_id": scene_id,
             "dataset_id": dataset_id,
+            "image_family": image_family,
             "seed": effective_seed,
             "difficulty": difficulty,
             "dimensions": {"width": width, "height": height},
@@ -267,7 +271,6 @@ class SceneGenerator:
         }
 
     def _compute_spatial_relations(self, components: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Compute relative pairwise spatial relationships between components."""
         relations = []
         for i, comp_a in enumerate(components):
             for j, comp_b in enumerate(components):
@@ -280,7 +283,6 @@ class SceneGenerator:
                 dy = by - ay
                 dist = round(math.sqrt(dx * dx + dy * dy), 1)
 
-                # Skip distant relationships (> 350px) to keep graph meaningful
                 if dist > 350:
                     continue
 

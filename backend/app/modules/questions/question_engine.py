@@ -60,7 +60,8 @@ class QuestionEngine:
         rng: random.Random
     ) -> Optional[Dict[str, Any]]:
         rule = tmpl["rule"]
-        qid = f"q_{uuid.UUID(int=rng.getrandbits(128)).hex[:8]}"
+        scene_prefix = scene_graph.get("scene_id", "sc")
+        qid = f"q_{scene_prefix}_{uuid.uuid4().hex[:8]}"
         params = {}
         format_args = {}
 
