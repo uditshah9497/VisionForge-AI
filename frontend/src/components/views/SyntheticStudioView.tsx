@@ -29,8 +29,8 @@ export const SyntheticStudioView: React.FC<SyntheticStudioViewProps> = ({
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [form, setForm] = useState({
-    name: 'Industrial Assembly Test Bench',
-    image_family: 'mechanical_assembly',
+    name: 'Smart Retail Supermarket Shelf Benchmark',
+    image_family: 'smart_retail_shelf',
     image_count: 5,
     components_per_scene: 6,
     difficulty: 'medium',
@@ -100,6 +100,7 @@ export const SyntheticStudioView: React.FC<SyntheticStudioViewProps> = ({
                 onChange={e => setForm({ ...form, image_family: e.target.value })}
                 className="w-full bg-[#080C14] border border-slate-800 rounded-lg px-3 py-2 text-cyan-300 font-medium outline-none focus:border-cyan-500"
               >
+                <option value="smart_retail_shelf">🛒 Smart Retail & Supermarket Shelf (Universal)</option>
                 <option value="mechanical_assembly">⚙️ Industrial Mechanical Workstation</option>
                 <option value="pcb_electronics">📟 SMT PCB Micro-Electronics Inspection</option>
                 <option value="aerospace_structural">🚀 Aerospace Fasteners & Composite Panel</option>

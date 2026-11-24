@@ -21,20 +21,30 @@ def test_question_generation_categories():
         assert q["answer_type"] in ("integer", "boolean", "category", "text")
 
 def test_deterministic_ground_truth_counting():
-    """Verify ground-truth counting is exact and deterministic."""
+    """Verify ground-truth counting is exact and deterministic for both retail and mechanical."""
     gen = SceneGenerator(seed=34)
-    sg = gen.generate_scene(component_count=6, seed=34)
 
+    # 1. Retail Shelf Beverage Counting
+    sg_retail = gen.generate_scene(image_family="smart_retail_shelf", component_count=6, seed=34)
+    beverages = [
+        c for c in sg_retail["components"]
+        if c["type"] in ("soda_can", "water_bottle", "juice_box", "coffee_mug") and c.get("visibility_score", 1.0) > 0.3
+    ]
+    ans_ret, atype_ret, ids_ret = GroundTruthEngine.calculate_answer("count_fasteners", sg_retail, {})
+    assert ans_ret == str(len(beverages))
+    assert atype_ret == "integer"
+    assert len(ids_ret) == len(beverages)
+
+    # 2. Industrial Workstation Fastener Counting
+    sg_mech = gen.generate_scene(image_family="mechanical_assembly", component_count=6, seed=34)
     fasteners = [
-        c for c in sg["components"]
+        c for c in sg_mech["components"]
         if c["type"] in ("hex_bolt", "hex_nut", "fastener") and c.get("visibility_score", 1.0) > 0.3
     ]
-    expected_count = str(len(fasteners))
-
-    ans, atype, ids = GroundTruthEngine.calculate_answer("count_fasteners", sg, {})
-    assert ans == expected_count
-    assert atype == "integer"
-    assert len(ids) == len(fasteners)
+    ans_mech, atype_mech, ids_mech = GroundTruthEngine.calculate_answer("count_fasteners", sg_mech, {})
+    assert ans_mech == str(len(fasteners))
+    assert atype_mech == "integer"
+    assert len(ids_mech) == len(fasteners)
 
 def test_spatial_relationship_ground_truth():
     """Verify spatial calculation between two explicit coordinates."""

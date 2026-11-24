@@ -4,6 +4,7 @@ import uuid
 from typing import Dict, Any, List, Optional
 from backend.app.modules.synthetic.components import (
     IMAGE_FAMILIES,
+    RETAIL_COMPONENTS,
     MECHANICAL_COMPONENTS,
     PCB_COMPONENTS,
     AEROSPACE_COMPONENTS,
@@ -22,7 +23,7 @@ class SceneGenerator:
         self,
         scene_id: Optional[str] = None,
         dataset_id: str = "ds_default",
-        image_family: str = "mechanical_assembly",
+        image_family: str = "smart_retail_shelf",
         difficulty: str = "medium",
         component_count: int = 6,
         defect_types: Optional[List[str]] = None,
@@ -63,9 +64,15 @@ class SceneGenerator:
         ambient = ambient_map.get(lighting, 0.78)
         lighting_dir = rng.choice(["top_left", "top_right", "direct"])
 
+        surface_color = (
+            "#1c1917" if image_family == "smart_retail_shelf"
+            else ("#121822" if image_family == "mechanical_assembly"
+            else ("#0f4b2a" if image_family == "pcb_electronics" else "#181a20"))
+        )
+
         workstation = {
             "fixture_type": f"{image_family}_substrate",
-            "surface_color": "#121822" if image_family == "mechanical_assembly" else ("#0f4b2a" if image_family == "pcb_electronics" else "#181a20"),
+            "surface_color": surface_color,
             "grid_spacing": 40,
             "lighting": {
                 "ambient": ambient,
@@ -78,24 +85,33 @@ class SceneGenerator:
 
         # 1. Base Foundation Component (Layer 1)
         components = []
-        base_cx = rng.randint(370, 430)
-        base_cy = rng.randint(270, 330)
+        base_cx = rng.randint(380, 420)
+        base_cy = rng.randint(280, 320)
 
-        if image_family == "pcb_electronics":
+        if image_family == "smart_retail_shelf":
+            base_type = "retail_shelf"
+            base_name = "Supermarket Display Shelf"
+            base_dims = {"width": 640, "height": 380}
+            candidate_types = [t for t in RETAIL_COMPONENTS]
+            base_material = "retail_shelf"
+        elif image_family == "pcb_electronics":
             base_type = "mounting_plate"
             base_name = "FR4 Precision PCB Board"
             base_dims = {"width": 320, "height": 220, "hole_radius": 5}
             candidate_types = [t for t in PCB_COMPONENTS]
+            base_material = "pcb_solder_mask"
         elif image_family == "aerospace_structural":
             base_type = "composite_panel"
             base_name = "Carbon-Fiber Composite Substrate"
             base_dims = {"width": 300, "height": 210}
             candidate_types = [t for t in AEROSPACE_COMPONENTS if t != "composite_panel"]
+            base_material = "composite_weave"
         else:
             base_type = "mounting_plate" if rng.random() > 0.3 else "assembly_fixture"
             base_name = COMPONENT_NAMES.get(base_type, "Machined Mounting Plate")
             base_dims = dict(DEFAULT_DIMENSIONS[base_type])
             candidate_types = [t for t in MECHANICAL_COMPONENTS if t not in ("mounting_plate", "assembly_fixture")]
+            base_material = "anodized_aluminum"
 
         base_id = f"comp_{base_type}_0"
         base_bbox = [
@@ -113,7 +129,7 @@ class SceneGenerator:
             "dimensions": base_dims,
             "bbox": [round(b, 1) for b in base_bbox],
             "rotation_deg": 0.0,
-            "material": "anodized_aluminum" if image_family == "mechanical_assembly" else ("pcb_solder_mask" if image_family == "pcb_electronics" else "composite_weave"),
+            "material": base_material,
             "expected_position": {"x": float(base_cx), "y": float(base_cy), "rotation_deg": 0.0},
             "is_defective": False,
             "defect_type": None,
@@ -134,19 +150,41 @@ class SceneGenerator:
         slots = []
         plate_w = base_dims["width"]
         plate_h = base_dims["height"]
-        slots.append((base_cx - plate_w * 0.28, base_cy - plate_h * 0.25))
-        slots.append((base_cx + plate_w * 0.28, base_cy - plate_h * 0.25))
-        slots.append((base_cx - plate_w * 0.28, base_cy + plate_h * 0.25))
-        slots.append((base_cx + plate_w * 0.28, base_cy + plate_h * 0.25))
-        slots.append((base_cx, base_cy))
-        slots.append((base_cx - plate_w * 0.65, base_cy))
-        slots.append((base_cx + plate_w * 0.65, base_cy))
-        slots.append((base_cx, base_cy - plate_h * 0.70))
-        slots.append((base_cx, base_cy + plate_h * 0.70))
-        slots.append((base_cx - plate_w * 0.65, base_cy - plate_h * 0.55))
-        slots.append((base_cx + plate_w * 0.65, base_cy + plate_h * 0.55))
+
+        if image_family == "smart_retail_shelf":
+            # Realistic 2-Tier Supermarket Shelf with 4 slots per tier
+            top_y = base_cy - 85
+            bot_y = base_cy + 85
+            xs = [base_cx - 210, base_cx - 70, base_cx + 70, base_cx + 210]
+            for x in xs:
+                slots.append((x, top_y))
+            for x in xs:
+                slots.append((x, bot_y))
+        else:
+            slots.append((base_cx - plate_w * 0.28, base_cy - plate_h * 0.25))
+            slots.append((base_cx + plate_w * 0.28, base_cy - plate_h * 0.25))
+            slots.append((base_cx - plate_w * 0.28, base_cy + plate_h * 0.25))
+            slots.append((base_cx + plate_w * 0.28, base_cy + plate_h * 0.25))
+            slots.append((base_cx, base_cy))
+            slots.append((base_cx - plate_w * 0.65, base_cy))
+            slots.append((base_cx + plate_w * 0.65, base_cy))
+            slots.append((base_cx, base_cy - plate_h * 0.70))
+            slots.append((base_cx, base_cy + plate_h * 0.70))
+            slots.append((base_cx - plate_w * 0.65, base_cy - plate_h * 0.55))
+            slots.append((base_cx + plate_w * 0.65, base_cy + plate_h * 0.55))
 
         materials = ["machined_steel", "brass", "black_oxide", "anodized_aluminum", "copper"]
+        retail_material_map = {
+            "soda_can": "retail_cola",
+            "milk_carton": "retail_milk",
+            "cereal_box": "retail_cereal",
+            "fresh_apple": "retail_apple",
+            "water_bottle": "retail_water",
+            "coffee_mug": "retail_mug",
+            "snack_chips": "retail_chips",
+            "chocolate_bar": "retail_chocolate",
+            "juice_box": "retail_juice"
+        }
 
         for idx, ctype in enumerate(selected_types):
             slot_x, slot_y = slots[idx % len(slots)]
@@ -182,6 +220,17 @@ class SceneGenerator:
             if ctype in ("spur_gear", "hex_nut", "fastener", "electrolytic_cap", "countersunk_rivet"):
                 r = dims.get("radius", 40)
                 bbox = [actual_x - r, actual_y - r, actual_x + r, actual_y + r]
+            elif ctype == "fresh_apple":
+                r = dims.get("radius", 26)
+                bbox = [actual_x - r, actual_y - r, actual_x + r, actual_y + r]
+            elif ctype == "soda_can":
+                w = dims.get("width", 48)
+                h = dims.get("height", 66)
+                bbox = [actual_x - w / 2, actual_y - h / 2, actual_x + w / 2, actual_y + h / 2]
+            elif ctype in ("milk_carton", "cereal_box", "snack_chips", "juice_box", "water_bottle", "chocolate_bar", "coffee_mug"):
+                w = dims.get("width", 56)
+                h = dims.get("height", 75)
+                bbox = [actual_x - w / 2, actual_y - h / 2, actual_x + w / 2, actual_y + h / 2]
             elif ctype in ("hex_bolt", "lockwire_fastener", "torque_seal_bolt"):
                 r = dims.get("flange_radius", 24)
                 bbox = [actual_x - r, actual_y - r, actual_x + r, actual_y + r]
@@ -204,6 +253,11 @@ class SceneGenerator:
             visibility = 0.0 if defect_type == "missing" else (0.65 if defect_type == "occlusion" else 1.0)
             occlusion_ratio = 1.0 if defect_type == "missing" else (0.35 if defect_type == "occlusion" else 0.0)
 
+            if image_family == "smart_retail_shelf":
+                comp_mat = retail_material_map.get(ctype, "retail_cola")
+            else:
+                comp_mat = rng.choice(materials)
+
             components.append({
                 "id": comp_id,
                 "type": ctype,
@@ -212,7 +266,7 @@ class SceneGenerator:
                 "dimensions": dims,
                 "bbox": [round(b, 1) for b in bbox],
                 "rotation_deg": round(actual_rot, 1),
-                "material": rng.choice(materials),
+                "material": comp_mat,
                 "expected_position": {"x": round(expected_x, 1), "y": round(expected_y, 1), "rotation_deg": expected_rot},
                 "is_defective": is_defective,
                 "defect_type": defect_type,
@@ -233,9 +287,10 @@ class SceneGenerator:
             else:
                 wire_points = [(150, 420), (400, 390), (680, 410)]
 
+            occ_type = "basket_handle" if image_family == "smart_retail_shelf" else "wire_harness"
             occlusions.append({
                 "id": "occ_wire_1",
-                "type": "wire_harness",
+                "type": occ_type,
                 "points": wire_points
             })
 
@@ -243,7 +298,10 @@ class SceneGenerator:
         clutter = []
         if difficulty in ("medium", "hard"):
             num_clutter = rng.randint(1, 3 if difficulty == "hard" else 2)
-            clutter_types = ["washer", "hex_key", "metal_chip"]
+            if image_family == "smart_retail_shelf":
+                clutter_types = ["price_tag_slip", "barcode_sticker", "receipt_slip"]
+            else:
+                clutter_types = ["washer", "hex_key", "metal_chip"]
             for c_i in range(num_clutter):
                 clutter.append({
                     "id": f"clutter_{c_i}",

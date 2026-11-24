@@ -29,7 +29,9 @@ class SyntheticRenderer:
         shadow_dy = -8 if "bottom" in direction else 8
 
         # 1. Generate realistic textured background canvas based on image family
-        if family == "pcb_electronics":
+        if family == "smart_retail_shelf":
+            base_img = self._create_retail_shelf_surface(scene_graph)
+        elif family == "pcb_electronics":
             base_img = self._create_pcb_surface(scene_graph)
         elif family == "aerospace_structural":
             base_img = self._create_aerospace_composite_surface(scene_graph)
@@ -161,6 +163,60 @@ class SyntheticRenderer:
         draw.line([(20, self.height // 2), (self.width - 20, self.height // 2)], fill=(50, 55, 68, 180), width=1)
         return img
 
+    def _create_retail_shelf_surface(self, scene_graph: Dict[str, Any]) -> Image.Image:
+        """Create high-end supermarket shelf / pantry display with wood grain decks and price rails."""
+        img = Image.new("RGBA", (self.width, self.height), (22, 27, 34, 255))
+        draw = ImageDraw.Draw(img)
+
+        # 1. Subtle vertical background wall panels
+        for x in range(0, self.width, 80):
+            draw.line([(x, 0), (x, self.height)], fill=(28, 34, 44, 255), width=1)
+
+        # 2. Upper Shelf Unit (y ~ 185 to 240)
+        draw.rectangle([50, 140, self.width - 50, 245], fill=(16, 20, 28, 255))
+        shelf1_top = 185
+        shelf1_bot = 225
+        # Wood deck
+        draw.rectangle([60, shelf1_top, self.width - 60, shelf1_bot], fill=(210, 180, 140, 255))
+        for y in range(shelf1_top + 4, shelf1_bot - 4, 6):
+            draw.line([(60, y), (self.width - 60, y)], fill=(190, 160, 120, 200), width=1)
+        # Edge highlight and shadow
+        draw.line([(60, shelf1_top), (self.width - 60, shelf1_top)], fill=(240, 215, 180, 255), width=2)
+        # Price rail channel
+        draw.rectangle([55, shelf1_bot, self.width - 55, shelf1_bot + 18], fill=(30, 36, 48, 255), outline=(50, 60, 75, 255))
+        # Shelf price tags on upper rail
+        for px in [150, 290, 430, 570]:
+            draw.rectangle([px - 22, shelf1_bot + 2, px + 22, shelf1_bot + 16], fill=(254, 240, 138, 255), outline=(202, 138, 4, 255))
+            draw.line([(px - 18, shelf1_bot + 9), (px - 2, shelf1_bot + 9)], fill=(69, 26, 3, 255), width=2)
+            draw.rectangle([px + 4, shelf1_bot + 4, px + 18, shelf1_bot + 14], fill=(255, 255, 255, 255))
+            for b in range(px + 6, px + 17, 3):
+                draw.line([(b, shelf1_bot + 5), (b, shelf1_bot + 13)], fill=(0, 0, 0, 255), width=1)
+
+        # 3. Lower Shelf Unit (y ~ 355 to 410)
+        draw.rectangle([50, 310, self.width - 50, 415], fill=(16, 20, 28, 255))
+        shelf2_top = 355
+        shelf2_bot = 395
+        draw.rectangle([60, shelf2_top, self.width - 60, shelf2_bot], fill=(210, 180, 140, 255))
+        for y in range(shelf2_top + 4, shelf2_bot - 4, 6):
+            draw.line([(60, y), (self.width - 60, y)], fill=(190, 160, 120, 200), width=1)
+        draw.line([(60, shelf2_top), (self.width - 60, shelf2_top)], fill=(240, 215, 180, 255), width=2)
+        # Price rail channel
+        draw.rectangle([55, shelf2_bot, self.width - 55, shelf2_bot + 18], fill=(30, 36, 48, 255), outline=(50, 60, 75, 255))
+        for px in [150, 290, 430, 570]:
+            draw.rectangle([px - 22, shelf2_bot + 2, px + 22, shelf2_bot + 16], fill=(254, 240, 138, 255), outline=(202, 138, 4, 255))
+            draw.line([(px - 18, shelf2_bot + 9), (px - 2, shelf2_bot + 9)], fill=(69, 26, 3, 255), width=2)
+            draw.rectangle([px + 4, shelf2_bot + 4, px + 18, shelf2_bot + 14], fill=(255, 255, 255, 255))
+            for b in range(px + 6, px + 17, 3):
+                draw.line([(b, shelf2_bot + 5), (b, shelf2_bot + 13)], fill=(0, 0, 0, 255), width=1)
+
+        # 4. Vertical upright support struts with slot matrix
+        for sx in [55, self.width - 55]:
+            draw.rectangle([sx - 10, 60, sx + 10, self.height - 60], fill=(45, 52, 65, 255), outline=(65, 75, 95, 255))
+            for sy in range(80, self.height - 80, 22):
+                draw.ellipse([sx - 3, sy - 4, sx + 3, sy + 4], fill=(15, 18, 24, 255))
+
+        return img
+
     # -------------------------------------------------------------
     # SHADOW RENDERING
     # -------------------------------------------------------------
@@ -174,6 +230,10 @@ class SyntheticRenderer:
         if ctype in ("spur_gear", "hex_nut", "fastener", "electrolytic_cap", "countersunk_rivet"):
             r = dims.get("radius", 40)
             draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=shadow_color)
+        elif ctype in ("soda_can", "water_bottle", "coffee_mug", "fresh_apple", "juice_box", "milk_carton", "cereal_box", "snack_chips", "chocolate_bar"):
+            w = dims.get("width", 50)
+            h = dims.get("height", 60)
+            draw.ellipse([cx - w / 2, cy + h / 2 - 10, cx + w / 2, cy + h / 2 + 10], fill=shadow_color)
         elif ctype in ("hex_bolt", "lockwire_fastener", "torque_seal_bolt"):
             r = dims.get("flange_radius", 24)
             draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=shadow_color)
@@ -202,6 +262,17 @@ class SyntheticRenderer:
         is_missing = comp.get("defect_type") == "missing"
 
         if is_missing:
+            if family == "smart_retail_shelf":
+                # Render empty shelf slot with dashed yellow border and OUT OF STOCK barcode sticker
+                w = comp["dimensions"].get("width", 54)
+                h = comp["dimensions"].get("height", 70)
+                x1, y1 = cx - w / 2, cy - h / 2
+                x2, y2 = cx + w / 2, cy + h / 2
+                draw.rectangle([x1, y1, x2, y2], outline=(234, 179, 8), width=2)
+                draw.rectangle([cx - 28, cy - 10, cx + 28, cy + 10], fill=(239, 68, 68), outline=(185, 28, 28))
+                draw.text((cx - 22, cy - 6), "EMPTY", fill=(255, 255, 255))
+                return
+
             # Render empty socket with realistic chamfer and thread groove
             r = comp["dimensions"].get("radius", 22)
             draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(10, 14, 22, 230), outline=(239, 68, 68, 220), width=2)
@@ -209,8 +280,27 @@ class SyntheticRenderer:
             draw.ellipse([cx - r/2, cy - r/2, cx + r/2, cy + r/2], fill=(5, 8, 14, 255))
             return
 
+        # Smart Retail & Supermarket Shelf components
+        if ctype == "soda_can":
+            self._render_soda_can(draw, cx, cy, rot, comp["dimensions"], palette)
+        elif ctype == "milk_carton":
+            self._render_milk_carton(draw, cx, cy, rot, comp["dimensions"], palette)
+        elif ctype == "cereal_box":
+            self._render_cereal_box(draw, cx, cy, rot, comp["dimensions"], palette)
+        elif ctype == "fresh_apple":
+            self._render_apple(draw, cx, cy, rot, comp["dimensions"], palette)
+        elif ctype == "water_bottle":
+            self._render_water_bottle(draw, cx, cy, rot, comp["dimensions"], palette)
+        elif ctype == "coffee_mug":
+            self._render_coffee_mug(draw, cx, cy, rot, comp["dimensions"], palette)
+        elif ctype == "snack_chips":
+            self._render_chips_bag(draw, cx, cy, rot, comp["dimensions"], palette)
+        elif ctype == "chocolate_bar":
+            self._render_chocolate_bar(draw, cx, cy, rot, comp["dimensions"], palette)
+        elif ctype == "juice_box":
+            self._render_juice_box(draw, cx, cy, rot, comp["dimensions"], palette)
         # Mechanical components
-        if ctype == "spur_gear":
+        elif ctype == "spur_gear":
             self._render_spur_gear_3d(draw, cx, cy, rot, comp["dimensions"], palette)
         elif ctype == "hex_bolt":
             self._render_hex_bolt_3d(draw, cx, cy, rot, comp["dimensions"], palette)
@@ -244,6 +334,219 @@ class SyntheticRenderer:
             w = comp["dimensions"].get("width", 60)
             h = comp["dimensions"].get("height", 40)
             draw.rectangle([cx - w/2, cy - h/2, cx + w/2, cy + h/2], fill=palette["base"], outline=palette["outline"], width=2)
+
+    # -------------------------------------------------------------
+    # SMART RETAIL & SUPERMARKET SHELF RENDERERS
+    # -------------------------------------------------------------
+    def _render_soda_can(self, draw: ImageDraw.ImageDraw, cx: float, cy: float, rot: float, dims: Dict[str, Any], pal: Dict[str, Any]):
+        w = dims.get("width", 48)
+        h = dims.get("height", 66)
+        x1, y1 = cx - w / 2, cy - h / 2
+        x2, y2 = cx + w / 2, cy + h / 2
+
+        # Can cylindrical body (Vibrant Red or Cola)
+        draw.rectangle([x1, y1 + 6, x2, y2 - 6], fill=pal["base"], outline=pal["outline"], width=1)
+        # Vertical specular reflection highlight streak
+        draw.rectangle([x1 + 6, y1 + 7, x1 + 14, y2 - 7], fill=pal["highlight"])
+        # Right edge shadow
+        draw.rectangle([x2 - 8, y1 + 7, x2 - 2, y2 - 7], fill=pal["shadow"])
+
+        # Silver aluminum top rim and pull-tab
+        silver = (215, 222, 230)
+        silver_dark = (120, 130, 145)
+        draw.ellipse([x1, y1, x2, y1 + 12], fill=silver, outline=silver_dark, width=1)
+        # Pull tab fixture
+        draw.ellipse([cx - 7, y1 + 2, cx + 7, y1 + 8], fill=silver_dark, outline=(80, 90, 100))
+        draw.ellipse([cx - 3, y1 + 4, cx + 3, y1 + 7], fill=silver)
+
+        # Bottom silver rim
+        draw.ellipse([x1, y2 - 12, x2, y2], fill=silver, outline=silver_dark, width=1)
+
+        # Center white dynamic wave stripe and brand text
+        draw.arc([x1 + 4, cy - 10, x2 - 4, cy + 10], start=0, end=180, fill=(255, 255, 255), width=3)
+        draw.text((cx - 14, cy - 6), "COLA", fill=(255, 255, 255))
+
+    def _render_milk_carton(self, draw: ImageDraw.ImageDraw, cx: float, cy: float, rot: float, dims: Dict[str, Any], pal: Dict[str, Any]):
+        w = dims.get("width", 54)
+        h = dims.get("height", 85)
+        x1, y1 = cx - w / 2, cy - h / 2
+        x2, y2 = cx + w / 2, cy + h / 2
+
+        # Gable-top triangular roof peak
+        peak_y = y1 - 12
+        roof_pts = [(x1, y1 + 8), (cx, peak_y), (x2, y1 + 8)]
+        draw.polygon(roof_pts, fill=(230, 240, 255), outline=pal["outline"])
+        draw.line([(cx, peak_y), (cx, y1 + 8)], fill=pal["outline"], width=2)
+        # Blue screw cap on gable slope
+        draw.ellipse([x1 + 8, y1 - 4, x1 + 20, y1 + 6], fill=(37, 99, 235), outline=(29, 78, 216))
+
+        # Carton rectangular body
+        draw.rectangle([x1, y1 + 8, x2, y2], fill=(250, 252, 255), outline=pal["outline"], width=1)
+        # Pastel blue lower section
+        draw.rectangle([x1, cy, x2, y2], fill=(191, 219, 254))
+        # Blue brand banner: "MILK"
+        draw.rectangle([x1, cy - 10, x2, cy + 6], fill=(37, 99, 235))
+        draw.text((cx - 12, cy - 7), "MILK", fill=(255, 255, 255))
+        # Green pasture clover / grass emblem
+        draw.ellipse([cx - 12, y2 - 20, cx + 12, y2 - 8], fill=(34, 197, 94))
+
+    def _render_cereal_box(self, draw: ImageDraw.ImageDraw, cx: float, cy: float, rot: float, dims: Dict[str, Any], pal: Dict[str, Any]):
+        w = dims.get("width", 72)
+        h = dims.get("height", 95)
+        x1, y1 = cx - w / 2, cy - h / 2
+        x2, y2 = cx + w / 2, cy + h / 2
+
+        # Warm sunburst yellow/orange box body
+        draw.rectangle([x1, y1, x2, y2], fill=pal["base"], outline=pal["outline"], width=2)
+        # Top bevel / lid edge
+        draw.rectangle([x1, y1, x2, y1 + 8], fill=pal["shadow"])
+        draw.line([(x1, y1 + 8), (x2, y1 + 8)], fill=pal["outline"], width=1)
+
+        # Brand Banner: "CRISPY"
+        draw.rectangle([x1 + 6, y1 + 14, x2 - 6, y1 + 32], fill=(220, 38, 38), outline=(153, 27, 27))
+        draw.text((cx - 18, y1 + 17), "CRISPY", fill=(255, 255, 255))
+
+        # Cereal Bowl graphic: white ceramic bowl with flakes and spoon
+        bowl_cx = cx
+        bowl_cy = cy + 18
+        draw.chord([bowl_cx - 22, bowl_cy - 12, bowl_cx + 22, bowl_cy + 16], start=0, end=180, fill=(255, 255, 255), outline=(180, 83, 9))
+        for fx, fy in [(bowl_cx - 10, bowl_cy - 2), (bowl_cx, bowl_cy - 4), (bowl_cx + 10, bowl_cy - 2), (bowl_cx - 4, bowl_cy + 2)]:
+            draw.ellipse([fx - 3, fy - 2, fx + 3, fy + 2], fill=(245, 158, 11))
+        # Silver spoon handle
+        draw.line([(bowl_cx + 12, bowl_cy), (bowl_cx + 26, bowl_cy - 14)], fill=(210, 220, 230), width=3)
+
+    def _render_apple(self, draw: ImageDraw.ImageDraw, cx: float, cy: float, rot: float, dims: Dict[str, Any], pal: Dict[str, Any]):
+        r = dims.get("radius", 26)
+        # Deep red organic apple lobes
+        draw.ellipse([cx - r, cy - r + 3, cx + 2, cy + r], fill=pal["base"])
+        draw.ellipse([cx - 2, cy - r + 3, cx + r, cy + r], fill=pal["base"])
+        # Specular highlight on left cheek
+        draw.ellipse([cx - r + 6, cy - r + 8, cx - r + 18, cy - r + 20], fill=pal["highlight"])
+        # Shadow on right underside
+        draw.arc([cx - r, cy - r + 3, cx + r, cy + r], start=0, end=90, fill=pal["shadow"], width=3)
+
+        # Top stem indentation
+        draw.ellipse([cx - 6, cy - r, cx + 6, cy - r + 6], fill=(127, 29, 29))
+        # Brown stem
+        draw.line([(cx, cy - r + 2), (cx + 4, cy - r - 10)], fill=(101, 52, 20), width=3)
+        # Vibrant green leaf
+        leaf_pts = [(cx + 4, cy - r - 6), (cx + 16, cy - r - 12), (cx + 18, cy - r - 5), (cx + 6, cy - r - 4)]
+        draw.polygon(leaf_pts, fill=(34, 197, 94), outline=(22, 101, 52))
+
+    def _render_water_bottle(self, draw: ImageDraw.ImageDraw, cx: float, cy: float, rot: float, dims: Dict[str, Any], pal: Dict[str, Any]):
+        w = dims.get("width", 36)
+        h = dims.get("height", 85)
+        x1, y1 = cx - w / 2, cy - h / 2
+        x2, y2 = cx + w / 2, cy + h / 2
+
+        # White twist cap at top
+        cap_w = 16
+        draw.rectangle([cx - cap_w/2, y1 - 8, cx + cap_w/2, y1], fill=(245, 250, 255), outline=(100, 116, 139), width=1)
+        # Tapered neck
+        draw.polygon([(cx - cap_w/2, y1), (cx + cap_w/2, y1), (x2 - 3, y1 + 14), (x1 + 3, y1 + 14)], fill=pal["base"])
+
+        # Aqua translucent bottle body
+        draw.rectangle([x1, y1 + 14, x2, y2], fill=pal["base"], outline=pal["outline"], width=1)
+        draw.rectangle([x1 + 5, y1 + 16, x1 + 10, y2 - 4], fill=pal["highlight"])
+
+        # Ribbed grip rings
+        for ry in range(int(y1 + 25), int(y2 - 15), 8):
+            draw.line([(x1 + 3, ry), (x2 - 3, ry)], fill=pal["shadow"], width=2)
+
+        # Label band: "PURE"
+        draw.rectangle([x1, cy - 6, x2, cy + 12], fill=(2, 132, 199))
+        draw.text((cx - 12, cy - 4), "PURE", fill=(255, 255, 255))
+
+    def _render_coffee_mug(self, draw: ImageDraw.ImageDraw, cx: float, cy: float, rot: float, dims: Dict[str, Any], pal: Dict[str, Any]):
+        w = dims.get("width", 54)
+        h = dims.get("height", 52)
+        x1, y1 = cx - w / 2, cy - h / 2
+        x2, y2 = cx + w / 2, cy + h / 2
+
+        # Curved ceramic handle on right
+        handle_x = x2 + 10
+        draw.arc([x2 - 8, y1 + 8, handle_x, y2 - 8], start=270, end=90, fill=pal["outline"], width=6)
+        draw.arc([x2 - 8, y1 + 10, handle_x - 2, y2 - 10], start=270, end=90, fill=pal["base"], width=4)
+
+        # Cylindrical mug body
+        draw.rectangle([x1, y1 + 8, x2, y2], fill=pal["base"], outline=pal["outline"], width=1)
+        draw.rectangle([x1 + 6, y1 + 10, x1 + 12, y2 - 4], fill=pal["highlight"])
+        draw.rectangle([x2 - 10, y1 + 10, x2 - 4, y2 - 4], fill=pal["shadow"])
+
+        # Top oval opening with dark roast coffee inside
+        draw.ellipse([x1, y1, x2, y1 + 16], fill=pal["base"], outline=pal["outline"], width=1)
+        draw.ellipse([x1 + 4, y1 + 2, x2 - 4, y1 + 14], fill=(66, 32, 6))
+        draw.arc([x1 + 6, y1 + 4, x2 - 6, y1 + 12], start=45, end=225, fill=(180, 140, 100), width=2)
+
+    def _render_chips_bag(self, draw: ImageDraw.ImageDraw, cx: float, cy: float, rot: float, dims: Dict[str, Any], pal: Dict[str, Any]):
+        w = dims.get("width", 62)
+        h = dims.get("height", 82)
+        x1, y1 = cx - w / 2, cy - h / 2
+        x2, y2 = cx + w / 2, cy + h / 2
+
+        # Puffy pillow bag silhouette
+        draw.rectangle([x1, y1 + 6, x2, y2 - 6], fill=pal["base"], outline=pal["outline"], width=1)
+        draw.rectangle([x1 + 8, y1 + 10, x1 + 18, y2 - 10], fill=pal["highlight"])
+
+        # Crimped zig-zag metallic seals
+        silver = (210, 225, 235)
+        draw.rectangle([x1 - 2, y1, x2 + 2, y1 + 6], fill=silver, outline=pal["outline"])
+        draw.rectangle([x1 - 2, y2 - 6, x2 + 2, y2], fill=silver, outline=pal["outline"])
+
+        # Starburst badge and "CHIPS" text
+        draw.ellipse([cx - 18, cy - 14, cx + 18, cy + 14], fill=(245, 158, 11), outline=(180, 83, 9))
+        draw.text((cx - 14, cy - 6), "CHIPS", fill=(255, 255, 255))
+
+    def _render_chocolate_bar(self, draw: ImageDraw.ImageDraw, cx: float, cy: float, rot: float, dims: Dict[str, Any], pal: Dict[str, Any]):
+        w = dims.get("width", 72)
+        h = dims.get("height", 42)
+        x1, y1 = cx - w / 2, cy - h / 2
+        x2, y2 = cx + w / 2, cy + h / 2
+
+        # Dark chocolate body
+        draw.rectangle([x1, y1, x2, y2], fill=pal["base"], outline=pal["outline"], width=1)
+
+        # 2x4 grid of chocolate squares
+        cols, rows = 4, 2
+        sw = (w - 10) / cols
+        sh = (h - 8) / rows
+        for r_i in range(rows):
+            for c_i in range(cols):
+                bx1 = x1 + 5 + c_i * sw
+                by1 = y1 + 4 + r_i * sh
+                draw.rectangle([bx1, by1, bx1 + sw - 2, by1 + sh - 2], fill=(90, 40, 10), outline=(50, 20, 5))
+                draw.line([(bx1, by1), (bx1 + sw - 2, by1)], fill=(140, 70, 20))
+
+        # Shiny crinkled gold foil wrapper covering left portion
+        gold = (234, 179, 8)
+        foil_w = w * 0.45
+        draw.rectangle([x1, y1, x1 + foil_w, y2], fill=gold, outline=(161, 98, 7), width=1)
+        # Red brand sleeve
+        draw.rectangle([x1, y1 + 6, x1 + foil_w - 6, y2 - 6], fill=(220, 38, 38))
+        draw.text((x1 + 4, cy - 5), "CHOC", fill=(255, 255, 255))
+
+    def _render_juice_box(self, draw: ImageDraw.ImageDraw, cx: float, cy: float, rot: float, dims: Dict[str, Any], pal: Dict[str, Any]):
+        w = dims.get("width", 44)
+        h = dims.get("height", 68)
+        x1, y1 = cx - w / 2, cy - h / 2
+        x2, y2 = cx + w / 2, cy + h / 2
+
+        # Vibrant orange juice box body
+        draw.rectangle([x1, y1, x2, y2], fill=pal["base"], outline=pal["outline"], width=1)
+        draw.rectangle([x1, y1, x2, y1 + 6], fill=pal["highlight"])
+
+        # Silver foil puncture hole at top right
+        straw_hole_x = x2 - 12
+        straw_hole_y = y1 + 3
+        draw.ellipse([straw_hole_x - 3, straw_hole_y - 2, straw_hole_x + 3, straw_hole_y + 2], fill=(200, 210, 225), outline=(100, 110, 120))
+        # Straw
+        draw.line([(straw_hole_x, straw_hole_y), (straw_hole_x + 6, y1 - 14)], fill=(255, 255, 255), width=3)
+        draw.line([(straw_hole_x + 6, y1 - 14), (straw_hole_x + 16, y1 - 10)], fill=(220, 38, 38), width=3)
+
+        # Orange slice graphic in center
+        draw.chord([cx - 14, cy - 8, cx + 14, cy + 20], start=180, end=360, fill=(255, 255, 255), outline=pal["outline"])
+        draw.chord([cx - 12, cy - 6, cx + 12, cy + 18], start=180, end=360, fill=(249, 115, 22))
+        draw.text((cx - 12, cy + 14), "100%", fill=(255, 255, 255))
 
     # -------------------------------------------------------------
     # 3D SHADED GEOMETRIC RENDERERS
@@ -543,7 +846,18 @@ class SyntheticRenderer:
         for item in items:
             itype = item.get("type", "washer")
             cx, cy = item["x"], item["y"]
-            if itype == "hex_key":
+            if itype == "price_tag_slip":
+                draw.rectangle([cx - 16, cy - 8, cx + 16, cy + 8], fill=(254, 240, 138), outline=(161, 98, 7))
+                draw.text((cx - 12, cy - 6), "$2.49", fill=(120, 53, 15))
+            elif itype == "barcode_sticker":
+                draw.rectangle([cx - 14, cy - 10, cx + 14, cy + 10], fill=(245, 245, 245), outline=(100, 110, 120))
+                for bx in range(cx - 10, cx + 10, 3):
+                    draw.line([(bx, cy - 7), (bx, cy + 7)], fill=(20, 20, 20), width=1)
+            elif itype == "receipt_slip":
+                draw.rectangle([cx - 10, cy - 16, cx + 10, cy + 16], fill=(250, 250, 250), outline=(180, 190, 200))
+                for ry in range(cy - 10, cy + 12, 4):
+                    draw.line([(cx - 7, ry), (cx + 7, ry)], fill=(140, 150, 160), width=1)
+            elif itype == "hex_key":
                 draw.line([(cx - 24, cy), (cx + 18, cy)], fill=(170, 185, 205), width=5)
                 draw.line([(cx + 18, cy), (cx + 18, cy + 22)], fill=(170, 185, 205), width=5)
             elif itype == "metal_chip":
@@ -554,7 +868,15 @@ class SyntheticRenderer:
 
     def _render_occlusions(self, draw: ImageDraw.ImageDraw, occlusions: List[Dict[str, Any]]):
         for occ in occlusions:
-            if occ.get("type") == "wire_harness":
+            if occ.get("type") == "basket_handle":
+                pts = occ.get("points", [(100, 300), (400, 270), (700, 300)])
+                draw.line(pts, fill=(60, 65, 75), width=16)
+                draw.line(pts, fill=(200, 210, 225), width=10) # Chrome wire gleam
+                draw.line(pts, fill=(255, 255, 255), width=2)
+                mid_x = (pts[0][0] + pts[-1][0]) // 2
+                mid_y = pts[1][1] if len(pts) > 1 else pts[0][1]
+                draw.rectangle([mid_x - 35, mid_y - 8, mid_x + 35, mid_y + 8], fill=(220, 38, 38), outline=(153, 27, 27), width=2)
+            elif occ.get("type") == "wire_harness":
                 pts = occ.get("points", [(100, 300), (400, 320), (700, 280)])
                 draw.line(pts, fill=(10, 14, 20), width=18)
                 draw.line(pts, fill=(220, 38, 38), width=10)   # High-voltage red sleeve

@@ -54,12 +54,12 @@ class BlindSpotEngine:
         target_type = target_comp["type"] if target_comp else "component"
 
         if perturbation_type == "component_removed" and target_comp:
-            # Change target to missing socket
+            # Change target to missing socket / empty slot
             target_comp["defect_type"] = "missing"
             target_comp["is_defective"] = True
             target_comp["visibility_score"] = 0.0
-            delta_desc = f"Removed {target_comp['name']} from assembly socket, leaving empty tapped hole."
-            question_text = f"Is there any missing component socket or unpopulated fixture hole visible?"
+            delta_desc = f"Removed {target_comp['name']} from shelf, leaving empty out-of-stock slot."
+            question_text = f"Is there any missing item or out-of-stock empty slot visible on the display?"
             ans_a = "no"
             ans_b = "yes"
             ans_type = "boolean"
@@ -75,7 +75,7 @@ class BlindSpotEngine:
             ]
             target_comp["is_defective"] = True
             target_comp["defect_type"] = "misplaced"
-            delta_desc = f"Shifted {target_comp['name']} by 45px outside designated mounting fixture."
+            delta_desc = f"Shifted {target_comp['name']} by 45px outside designated display position."
             question_text = f"Is the {target_comp['name']} properly aligned without spatial displacement?"
             ans_a = "yes"
             ans_b = "no"
@@ -94,22 +94,23 @@ class BlindSpotEngine:
         elif perturbation_type == "lighting_change":
             scene_b["workstation"]["lighting"]["ambient"] = 0.35
             scene_b["workstation"]["lighting"]["lighting_profile"] = "low_light"
-            delta_desc = "Reduced ambient workstation illuminance from 80% to 35% (low lux testing)."
-            target_name = target_comp["name"] if target_comp else "components"
-            question_text = f"Is the {target_name} clearly visible on the workstation?"
+            delta_desc = "Reduced ambient display illuminance from 82% to 35% (dim lighting testing)."
+            target_name = target_comp["name"] if target_comp else "items"
+            question_text = f"Is the {target_name} clearly visible on the display?"
             ans_a = "yes"
             ans_b = "yes"
             ans_type = "boolean"
 
         elif perturbation_type == "occlusion" and target_comp:
             cx, cy = target_comp["center"]["x"], target_comp["center"]["y"]
+            occ_type = "basket_handle" if scene_a.get("image_family") == "smart_retail_shelf" else "wire_harness"
             scene_b["occlusions"] = [{
                 "id": f"occ_{pair_id}",
-                "type": "wire_harness",
+                "type": occ_type,
                 "points": [(cx - 150, cy + 30), (cx, cy), (cx + 150, cy - 20)]
             }]
             target_comp["visibility_score"] = 0.60
-            delta_desc = f"Introduced heavy industrial wire harness occluding 40% of {target_comp['name']}."
+            delta_desc = f"Introduced foreground occlusion obscuring 40% of {target_comp['name']}."
             question_text = f"Is the {target_comp['name']} completely unobstructed with zero occlusion?"
             ans_a = "yes"
             ans_b = "no"

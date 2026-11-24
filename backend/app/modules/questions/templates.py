@@ -5,21 +5,21 @@ QUESTION_TEMPLATES = {
         {
             "id": "ident_type_at_pos",
             "difficulty": "easy",
-            "template": "What type of industrial component is positioned near ({x}, {y})?",
+            "template": "What type of product or component is positioned near ({x}, {y})?",
             "answer_type": "category",
             "rule": "find_component_at_coord"
         },
         {
             "id": "ident_presence",
             "difficulty": "easy",
-            "template": "Is there a {component_name} present and visible on the assembly workstation?",
+            "template": "Is there a {component_name} present and visible on the display?",
             "answer_type": "boolean",
             "rule": "check_component_presence"
         },
         {
             "id": "ident_material",
             "difficulty": "medium",
-            "template": "What material finish or finish type does the {component_name} at ({x}, {y}) appear to have?",
+            "template": "What color or material finish does the {component_name} at ({x}, {y}) appear to have?",
             "answer_type": "category",
             "rule": "get_component_material"
         }
@@ -28,21 +28,21 @@ QUESTION_TEMPLATES = {
         {
             "id": "count_specific_type",
             "difficulty": "easy",
-            "template": "How many {component_name}s are visible on the assembly workstation?",
+            "template": "How many {component_name}s are visible on the display?",
             "answer_type": "integer",
             "rule": "count_visible_by_type"
         },
         {
             "id": "count_fasteners_total",
             "difficulty": "medium",
-            "template": "How many total fasteners (hex bolts, hex nuts, and circlips) are visible on the workstation?",
+            "template": "How many target items (beverage containers or fasteners) are visible on the display?",
             "answer_type": "integer",
             "rule": "count_fasteners"
         },
         {
             "id": "count_defective_components",
             "difficulty": "hard",
-            "template": "How many components on the workstation exhibit defects (missing, displaced, or rotated)?",
+            "template": "How many items on the display exhibit defects or anomalies (missing, displaced, or knocked over)?",
             "answer_type": "integer",
             "rule": "count_defective"
         }
@@ -65,7 +65,7 @@ QUESTION_TEMPLATES = {
         {
             "id": "spatial_nearest_to_fixture",
             "difficulty": "medium",
-            "template": "Which component is positioned closest to the center of the base {base_name}?",
+            "template": "Which item is positioned closest to the center of the base {base_name}?",
             "answer_type": "category",
             "rule": "get_closest_to_base"
         }
@@ -74,14 +74,14 @@ QUESTION_TEMPLATES = {
         {
             "id": "anomaly_missing_present",
             "difficulty": "medium",
-            "template": "Is there any missing component socket or unpopulated mounting hole visible on the workstation?",
+            "template": "Is there any missing component socket or out-of-stock empty slot visible on the display?",
             "answer_type": "boolean",
             "rule": "check_missing_socket"
         },
         {
             "id": "anomaly_identify_defective",
             "difficulty": "hard",
-            "template": "Which component exhibits an assembly defect (misplaced, missing, or incorrect orientation)?",
+            "template": "Which item exhibits an anomaly or defect (misplaced, missing, or knocked over)?",
             "answer_type": "category",
             "rule": "identify_defective_component"
         },
@@ -97,7 +97,7 @@ QUESTION_TEMPLATES = {
         {
             "id": "rel_mounted_on_base",
             "difficulty": "easy",
-            "template": "Is the {component_name} at ({x}, {y}) positioned within the boundary of the base {base_name}?",
+            "template": "Is the {component_name} at ({x}, {y}) positioned within the boundary of the {base_name}?",
             "answer_type": "boolean",
             "rule": "check_mounted_on_base"
         },

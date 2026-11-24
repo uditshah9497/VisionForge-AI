@@ -3,12 +3,26 @@ from typing import Dict, Any, List, Tuple
 
 # Supported Image Families
 IMAGE_FAMILIES = {
+    "smart_retail_shelf": "Smart Retail & Supermarket Shelf Inspection (Universal)",
     "mechanical_assembly": "Industrial Mechanical Assembly Workstation",
     "pcb_electronics": "High-Density SMT PCB Micro-Electronics Inspection",
     "aerospace_structural": "Aerospace Fastener & Composite Panel Array",
 }
 
-# 1. Industrial Mechanical Workstation Components
+# 1. Universally Understandable Smart Retail & Supermarket Shelf Items
+RETAIL_COMPONENTS = [
+    "soda_can",
+    "milk_carton",
+    "cereal_box",
+    "fresh_apple",
+    "water_bottle",
+    "coffee_mug",
+    "snack_chips",
+    "chocolate_bar",
+    "juice_box"
+]
+
+# 2. Industrial Mechanical Workstation Components
 MECHANICAL_COMPONENTS = [
     "spur_gear",
     "hex_bolt",
@@ -22,7 +36,7 @@ MECHANICAL_COMPONENTS = [
     "assembly_fixture",
 ]
 
-# 2. PCB / Micro-Electronics Components
+# 3. PCB / Micro-Electronics Components
 PCB_COMPONENTS = [
     "microcontroller_qfp",
     "smd_resistor",
@@ -34,7 +48,7 @@ PCB_COMPONENTS = [
     "crystal_oscillator"
 ]
 
-# 3. Aerospace Structural Hardware
+# 4. Aerospace Structural Hardware
 AEROSPACE_COMPONENTS = [
     "titanium_bracket",
     "countersunk_rivet",
@@ -44,9 +58,20 @@ AEROSPACE_COMPONENTS = [
     "torque_seal_bolt"
 ]
 
-ALL_COMPONENTS = MECHANICAL_COMPONENTS + PCB_COMPONENTS + AEROSPACE_COMPONENTS
+ALL_COMPONENTS = RETAIL_COMPONENTS + MECHANICAL_COMPONENTS + PCB_COMPONENTS + AEROSPACE_COMPONENTS
 
 COMPONENT_NAMES = {
+    # Retail & Everyday Items (Universally Understood)
+    "soda_can": "Red Cola Soda Can",
+    "milk_carton": "Whole Milk Carton",
+    "cereal_box": "Crispy Cereal Box",
+    "fresh_apple": "Red Gala Apple",
+    "water_bottle": "Spring Water Bottle",
+    "coffee_mug": "Ceramic Coffee Mug",
+    "snack_chips": "Potato Chips Snack Bag",
+    "chocolate_bar": "Dark Chocolate Bar",
+    "juice_box": "Orange Juice Box",
+    "retail_shelf": "Supermarket Display Shelf",
     # Mechanical
     "spur_gear": "Drive Spur Gear 40T",
     "hex_bolt": "M8 Hex Flange Bolt",
@@ -77,6 +102,17 @@ COMPONENT_NAMES = {
 }
 
 DEFAULT_DIMENSIONS = {
+    # Retail items
+    "soda_can": {"radius": 24, "height": 65, "width": 48},
+    "milk_carton": {"width": 55, "height": 95},
+    "cereal_box": {"width": 80, "height": 115},
+    "fresh_apple": {"radius": 26},
+    "water_bottle": {"width": 38, "height": 95, "cap_radius": 10},
+    "coffee_mug": {"width": 56, "height": 52, "radius": 26},
+    "snack_chips": {"width": 68, "height": 90},
+    "chocolate_bar": {"width": 75, "height": 40},
+    "juice_box": {"width": 46, "height": 72},
+    "retail_shelf": {"width": 580, "height": 380},
     # Mechanical
     "spur_gear": {"radius": 55, "teeth": 16, "bore_radius": 15},
     "hex_bolt": {"radius": 18, "head_radius": 18, "flange_radius": 24},
@@ -106,45 +142,96 @@ DEFAULT_DIMENSIONS = {
     "torque_seal_bolt": {"radius": 19}
 }
 
-# Realistic Materials Palettes with shading gradients
+# Material & Color Palettes
 MATERIAL_PALETTES = {
+    "retail_cola": {
+        "base": (220, 38, 38),       # Vibrant Red
+        "highlight": (254, 202, 202), # Specular Top
+        "shadow": (153, 27, 27),
+        "outline": (69, 10, 10),
+    },
+    "retail_milk": {
+        "base": (240, 248, 255),      # Clean White/Blue
+        "highlight": (255, 255, 255),
+        "shadow": (200, 220, 245),
+        "outline": (30, 64, 175),
+    },
+    "retail_cereal": {
+        "base": (245, 158, 11),       # Warm Yellow / Orange
+        "highlight": (254, 240, 138),
+        "shadow": (180, 83, 9),
+        "outline": (120, 53, 15),
+    },
+    "retail_apple": {
+        "base": (239, 68, 68),        # Fresh Apple Red
+        "highlight": (252, 165, 165),
+        "shadow": (185, 28, 28),
+        "outline": (127, 29, 29),
+        "leaf": (34, 197, 94)
+    },
+    "retail_water": {
+        "base": (56, 189, 248),       # Crisp Aqua Blue
+        "highlight": (224, 242, 254),
+        "shadow": (2, 132, 199),
+        "outline": (7, 89, 133),
+    },
+    "retail_mug": {
+        "base": (241, 245, 249),      # Ceramic Slate White
+        "highlight": (255, 255, 255),
+        "shadow": (148, 163, 184),
+        "outline": (71, 85, 105),
+        "coffee": (66, 32, 6)
+    },
+    "retail_chips": {
+        "base": (16, 185, 129),       # Emerald Green Bag
+        "highlight": (167, 243, 208),
+        "shadow": (4, 120, 87),
+        "outline": (6, 78, 59),
+    },
+    "retail_chocolate": {
+        "base": (120, 53, 15),        # Rich Chocolate Brown
+        "highlight": (217, 119, 6),   # Gold Foil Accent
+        "shadow": (69, 26, 3),
+        "outline": (30, 10, 0),
+    },
+    "retail_juice": {
+        "base": (249, 115, 22),       # Orange Juice Box
+        "highlight": (254, 215, 170),
+        "shadow": (194, 65, 12),
+        "outline": (124, 45, 18),
+    },
     "machined_steel": {
         "base": (170, 182, 198),
         "highlight": (240, 245, 255),
         "shadow": (95, 110, 130),
         "outline": (45, 55, 75),
-        "gradient": [(210, 220, 235), (150, 165, 180)]
     },
     "brass": {
         "base": (217, 168, 62),
         "highlight": (255, 228, 140),
         "shadow": (155, 110, 30),
         "outline": (100, 70, 15),
-        "gradient": [(245, 205, 100), (180, 130, 35)]
     },
     "black_oxide": {
         "base": (55, 62, 75),
         "highlight": (115, 125, 140),
         "shadow": (28, 34, 45),
         "outline": (15, 20, 30),
-        "gradient": [(75, 85, 100), (40, 48, 60)]
     },
     "anodized_aluminum": {
         "base": (150, 165, 185),
         "highlight": (245, 248, 255),
         "shadow": (75, 90, 110),
         "outline": (35, 45, 60),
-        "gradient": [(190, 205, 225), (120, 135, 155)]
     },
     "copper": {
         "base": (217, 119, 30),
         "highlight": (255, 195, 80),
         "shadow": (170, 75, 15),
         "outline": (110, 45, 10),
-        "gradient": [(240, 150, 50), (180, 85, 20)]
     },
     "pcb_solder_mask": {
-        "base": (16, 85, 48),  # Classic FR4 Green
+        "base": (16, 85, 48),
         "highlight": (22, 115, 65),
         "shadow": (10, 55, 32),
         "outline": (10, 45, 25),
@@ -160,7 +247,6 @@ MATERIAL_PALETTES = {
 }
 
 def compute_polygon_bounds(points: List[Tuple[float, float]]) -> List[float]:
-    """Calculate [x_min, y_min, x_max, y_max] from vertex points."""
     xs = [p[0] for p in points]
     ys = [p[1] for p in points]
     return [round(min(xs), 2), round(min(ys), 2), round(max(xs), 2), round(max(ys), 2)]

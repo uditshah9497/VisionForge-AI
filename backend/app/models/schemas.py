@@ -55,10 +55,10 @@ class SceneGraph(BaseModel):
 
 # Dataset Schemas
 class DatasetCreateRequest(BaseModel):
-    name: str = "Industrial Assembly Workstation Bench"
-    description: Optional[str] = "Synthetic manufacturing benchmark containing assembly components, defects, and spatial variations."
-    domain: str = "Manufacturing Quality Inspection"
-    image_family: str = "mechanical_assembly"  # mechanical_assembly, pcb_electronics, aerospace_structural
+    name: str = "Smart Retail Supermarket Shelf Inspection Bench"
+    description: Optional[str] = "Everyday consumer goods (soda cans, milk cartons, cereal boxes, apples, water bottles) on supermarket display shelves with automated out-of-stock and misalignment detection."
+    domain: str = "Smart Retail & Supermarket Shelf Inspection"
+    image_family: str = "smart_retail_shelf"  # smart_retail_shelf, mechanical_assembly, pcb_electronics, aerospace_structural
     image_count: int = 5
     components_per_scene: int = 6
     difficulty: str = "medium"  # easy, medium, hard
@@ -72,7 +72,7 @@ class DatasetResponse(BaseModel):
     name: str
     description: Optional[str]
     domain: str
-    image_family: str = "mechanical_assembly"
+    image_family: str = "smart_retail_shelf"
     seed: int
     difficulty: str
     num_scenes: int

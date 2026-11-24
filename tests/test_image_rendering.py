@@ -40,9 +40,9 @@ def test_render_with_lighting_and_defects(tmp_path):
     assert res["file_size_bytes"] > 2000
 
 def test_render_all_image_families(tmp_path):
-    """Verify rendering succeeds across all supported industrial image families."""
+    """Verify rendering succeeds across all supported image families."""
     renderer = SyntheticRenderer()
-    for family in ["mechanical_assembly", "pcb_electronics", "aerospace_structural"]:
+    for family in ["smart_retail_shelf", "mechanical_assembly", "pcb_electronics", "aerospace_structural"]:
         gen = SceneGenerator(seed=99)
         sg = gen.generate_scene(image_family=family, difficulty="medium", seed=99)
         out_file = str(tmp_path / f"test_{family}.png")

@@ -50,11 +50,19 @@ class GroundTruthEngine:
             return str(len(matches)), "integer", [c["id"] for c in matches]
 
         elif rule == "count_fasteners":
-            fasteners = [
-                c for c in components
-                if c["type"] in ("hex_bolt", "hex_nut", "fastener", "countersunk_rivet", "lockwire_fastener", "torque_seal_bolt") and c.get("visibility_score", 1.0) > 0.3
-            ]
-            return str(len(fasteners)), "integer", [c["id"] for c in fasteners]
+            family = scene_graph.get("image_family", "smart_retail_shelf")
+            if family == "smart_retail_shelf":
+                beverages = [
+                    c for c in components
+                    if c["type"] in ("soda_can", "water_bottle", "juice_box", "coffee_mug") and c.get("visibility_score", 1.0) > 0.3
+                ]
+                return str(len(beverages)), "integer", [c["id"] for c in beverages]
+            else:
+                fasteners = [
+                    c for c in components
+                    if c["type"] in ("hex_bolt", "hex_nut", "fastener", "countersunk_rivet", "lockwire_fastener", "torque_seal_bolt") and c.get("visibility_score", 1.0) > 0.3
+                ]
+                return str(len(fasteners)), "integer", [c["id"] for c in fasteners]
 
         elif rule == "count_defective":
             defective = [c for c in components if c.get("is_defective", False)]
